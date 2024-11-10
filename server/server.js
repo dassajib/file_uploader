@@ -1,20 +1,19 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const cors = require('cors'); // Import the cors package
+const fs = require('fs'); 
+const cors = require('cors'); 
 
 const app = express();
 
-// Enable CORS for all origins (or you can specify a specific origin)
 app.use(cors());
 
-// Setup multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, './uploads'); // Save files in 'uploads' folder
+    cb(null, './uploads'); 
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // unique name
+    cb(null, Date.now() + path.extname(file.originalname)); 
   },
 });
 
@@ -35,6 +34,15 @@ app.post('/upload', upload.array('attachments', 10), (req, res) => {
     message: 'Files uploaded successfully',
     count: fileCount,
     files: uploadedFiles,
+  });
+});
+
+app.get('/file-count', (req, res) => {
+  fs.readdir('./uploads', (err, files) => {
+    if (err) {
+      return res.status(500).json({ message: 'Error reading files' });
+    }
+    res.json({ fileCount: files.length });
   });
 });
 
