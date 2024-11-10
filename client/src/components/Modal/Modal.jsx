@@ -1,32 +1,36 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
-const Modal = ({ closeModal }) => {
+const Modal = ({ closeModal, fetchFileCount }) => {
   const [files, setFiles] = useState([]);
 
-  // Handle file input change
   const handleFileChange = (e) => {
-    setFiles(e.target.files); // Multiple files are stored here
+    const selectedFiles = Array.from(e.target.files);
+    setFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
   };
 
-  // Handle file upload
   const handleFileUpload = async (e) => {
     e.preventDefault();
 
-    // Create FormData to send files
-    const formData = new FormData();
-    for (let file of files) {
-      formData.append("attachments", file); // Append each file
+    if (files.length === 0) {
+      alert("Please select files to upload.");
+      return;
     }
+
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("attachments", file);
+    });
 
     try {
       const response = await fetch("http://localhost:5000/upload", {
         method: "POST",
         body: formData,
       });
+
       const data = await response.json();
       if (data.message) {
-        console.log(data.message); // Success message
-        // Close modal or handle success
+        console.log(data.message);
+        fetchFileCount();
         closeModal();
       }
     } catch (error) {
@@ -39,7 +43,6 @@ const Modal = ({ closeModal }) => {
       <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md mx-auto">
         <h2 className="text-xl font-semibold mb-4">Upload Files</h2>
 
-        {/* Form to submit files */}
         <form className="flex flex-col space-y-4" onSubmit={handleFileUpload}>
           <input
             type="file"
@@ -49,7 +52,17 @@ const Modal = ({ closeModal }) => {
             className="border p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
 
-          {/* Buttons */}
+          {files.length > 0 && (
+            <div className="mt-2">
+              <h3 className="text-md font-semibold">Selected Files:</h3>
+              <ul>
+                {files.map((file, index) => (
+                  <li key={index}>{file.name}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <div className="flex justify-end space-x-2">
             <button
               type="button"
